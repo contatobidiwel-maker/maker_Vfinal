@@ -458,7 +458,11 @@ html,body{height:100%;overflow:hidden;font-family:var(--body);background:var(--b
   <!-- Dashboard -->
   <div id="rev-dash" style="display:none;flex:1;flex-direction:row;overflow:hidden">
     <!-- Mini player Review -->
-    <div id="rev-vpanel" style="width:320px;flex-shrink:0;border-right:1px solid var(--b1);background:var(--bg2);display:flex;flex-direction:column">
+    <div id="rev-vpanel" style="width:400px;flex-shrink:0;border-right:1px solid var(--b1);background:var(--bg2);display:flex;flex-direction:column;position:relative;min-width:200px;max-width:700px">
+      <!-- Resize handle -->
+      <div id="rev-resize" style="position:absolute;right:-4px;top:0;bottom:0;width:8px;cursor:col-resize;z-index:20;display:flex;align-items:center;justify-content:center" onmousedown="revResizeStart(event)">
+        <div style="width:2px;height:40px;background:var(--b3);border-radius:2px;transition:background .15s" id="rev-resize-bar"></div>
+      </div>
       <div style="flex:1;background:#000;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:160px" onclick="togglePlay()">
         <video id="vid" preload="metadata" style="width:100%;height:100%;object-fit:contain;display:none" onclick="togglePlay()"></video>
         <div id="vempty" style="position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px;opacity:.3">
@@ -485,6 +489,11 @@ html,body{height:100%;overflow:hidden;font-family:var(--body);background:var(--b
           <span class="vfn" id="vfn">—</span>
           <button class="btn btn-sm" onclick="document.getElementById('vfi').click()">Vídeo</button>
           <input type="file" id="vfi" accept="video/*" style="display:none" onchange="loadVid(this)">
+          <div style="display:flex;gap:2px;margin-left:4px">
+            <button class="btn btn-sm" onclick="revSetW(280)" style="padding:3px 7px;font-size:9px;min-width:0" title="Pequeno">S</button>
+            <button class="btn btn-sm" onclick="revSetW(400)" style="padding:3px 7px;font-size:9px;min-width:0" title="Médio">M</button>
+            <button class="btn btn-sm" onclick="revSetW(560)" style="padding:3px 7px;font-size:9px;min-width:0" title="Grande">L</button>
+          </div>
         </div>
       </div>
     </div>
@@ -3437,6 +3446,34 @@ function anPasteRender(){
   var el=document.getElementById('an-paste'); if(!el)return; var txt=el.value.trim(); if(!txt)return;
   var localData=anParseLocal(document.getElementById('an-rot').value.trim()||txt);
   var aiData=anTryParseJson(txt); anRenderStructured(anMergeData(localData,aiData||{}));
+}
+
+
+/* ── REVIEW VIDEO RESIZE ── */
+var revResizing=false, revResizeStartX=0, revResizeStartW=0;
+function revResizeStart(e){
+  revResizing=true;
+  revResizeStartX=e.clientX;
+  revResizeStartW=document.getElementById('rev-vpanel').offsetWidth;
+  document.getElementById('rev-resize-bar').style.background='var(--acc)';
+  document.addEventListener('mousemove',revResizeMove);
+  document.addEventListener('mouseup',revResizeEnd);
+  e.preventDefault();
+}
+function revResizeMove(e){
+  if(!revResizing)return;
+  var dx=e.clientX-revResizeStartX;
+  var newW=Math.max(200,Math.min(700,revResizeStartW+dx));
+  document.getElementById('rev-vpanel').style.width=newW+'px';
+}
+function revResizeEnd(){
+  revResizing=false;
+  document.getElementById('rev-resize-bar').style.background='var(--b3)';
+  document.removeEventListener('mousemove',revResizeMove);
+  document.removeEventListener('mouseup',revResizeEnd);
+}
+function revSetW(w){
+  document.getElementById('rev-vpanel').style.width=w+'px';
 }
 
 window.addEventListener('load',function(){
